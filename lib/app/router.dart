@@ -4,7 +4,7 @@ import 'package:lingmeng/pages/main/view.dart';
 
 abstract final class AppRoute {
   static const String home = "/";
-  static const String chat = "/chat";
+  static const String chat = "/chat/:id";
 }
 
 abstract final class AppRouter {
@@ -18,8 +18,10 @@ abstract final class AppRouter {
 
       GoRoute(
         path: AppRoute.chat,
-        pageBuilder: (context, state) =>
-            const NoTransitionPage(child: ChatPage()),
+        pageBuilder: (context, state) {
+            final chatID = state.pathParameters['id'];
+            return const NoTransitionPage(child: ChatPage());
+        }
       ),
     ],
   );

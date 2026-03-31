@@ -12,9 +12,10 @@ class _SideBarState extends State<SideBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 240,
       height: double.infinity,
-      color: Colors.white60,
-      child: Column(children: [Text("Hello Flutter!")]),
+      color: Colors.grey,
+      child: Column(children: [Text("Hello Flutter!"), Text("Hello Flutter!")]),
     );
   }
 }
