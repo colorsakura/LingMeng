@@ -2,19 +2,18 @@ import 'package:dio/dio.dart';
 
 import '../backend_base.dart';
 
-/// Kimi 网页端 API 客户端（单例）。
+/// DeepSeek 网页端 API 客户端（单例）。
 ///
 /// 当前实现重点模拟网页端会话列表接口：
-/// `/apiv2/kimi.chat.v1.ChatService/ListChats`。
-class Kimi extends BackendBase {
-  static const String _baseUrl = 'https://www.kimi.com';
-  static const String _listChatsPath =
-      '/apiv2/kimi.chat.v1.ChatService/ListChats';
+/// `/chat/sessions`。
+class DeepSeek extends BackendBase {
+  static const String _baseUrl = 'https://api.deepseek.com';
+  static const String _listChatsPath = '/chat/sessions';
 
-  static final Kimi _instance = Kimi._internal();
+  static final DeepSeek _instance = DeepSeek._internal();
 
   @override
-  final String name = 'Kimi';
+  final String name = 'DeepSeek';
 
   @override
   String get baseUrl => _baseUrl;
@@ -22,12 +21,12 @@ class Kimi extends BackendBase {
   String? _accessToken;
 
   /// 生产代码使用的单例入口。
-  factory Kimi() => _instance;
+  factory DeepSeek() => _instance;
 
-  Kimi._internal();
+  DeepSeek._internal();
 
   /// 测试注入构造：允许传入自定义 [Dio]。
-  Kimi.test(Dio dio) : super.withDio(dio);
+  DeepSeek.test(Dio dio) : super.withDio(dio);
 
   @override
   String? get accessToken => _accessToken;
@@ -40,44 +39,45 @@ class Kimi extends BackendBase {
   /// 拉取会话分页数据。
   ///
   /// 参数与网页端协议字段保持一致：
-  /// - [projectId] -> `project_id`
   /// - [pageSize] -> `page_size`
   /// - [pageToken] -> `page_token`
   /// - [query] -> `query`
-  Future<KimiChatsPage> getChats({
+  Future<DeepSeekChatsPage> getChats({
     int pageSize = 20,
     String pageToken = '',
-    String projectId = '',
     String query = '',
   }) async {
     if (pageSize <= 0) {
       throw ArgumentError.value(pageSize, 'pageSize', '必须大于 0');
     }
 
-    return post(_listChatsPath, <String, dynamic>{
-      'project_id': projectId,
-      'page_size': pageSize,
-      'page_token': pageToken,
-      'query': query,
-    }, KimiChatsPage.fromJson);
+    return post(
+      _listChatsPath,
+      <String, dynamic>{
+        'page_size': pageSize,
+        'page_token': pageToken,
+        'query': query,
+      },
+      DeepSeekChatsPage.fromJson,
+    );
   }
 }
 
-/// Kimi 会话分页结果。
-class KimiChatsPage {
-  final List<KimiChat> chats;
+/// DeepSeek 会话分页结果。
+class DeepSeekChatsPage {
+  final List<DeepSeekChat> chats;
   final String nextPageToken;
 
-  const KimiChatsPage({required this.chats, required this.nextPageToken});
+  const DeepSeekChatsPage({required this.chats, required this.nextPageToken});
 
-  factory KimiChatsPage.fromJson(Map<String, dynamic> json) {
+  factory DeepSeekChatsPage.fromJson(Map<String, dynamic> json) {
     final rawChats = json['chats'];
     if (rawChats is! List) {
       throw const FormatException('字段 chats 必须是数组');
     }
 
     final chats = rawChats
-        .map((item) => KimiChat.fromJson(BackendBase.toStringKeyMap(item)))
+        .map((item) => DeepSeekChat.fromJson(BackendBase.toStringKeyMap(item)))
         .toList(growable: false);
 
     final token = json['nextPageToken'];
@@ -85,19 +85,19 @@ class KimiChatsPage {
       throw const FormatException('字段 nextPageToken 必须是字符串');
     }
 
-    return KimiChatsPage(chats: chats, nextPageToken: token as String? ?? '');
+    return DeepSeekChatsPage(chats: chats, nextPageToken: token as String? ?? '');
   }
 }
 
-/// Kimi 单条会话概要。
-class KimiChat {
+/// DeepSeek 单条会话概要。
+class DeepSeekChat {
   final String id;
   final String name;
   final String messageContent;
   final String? createTime;
   final String? updateTime;
 
-  const KimiChat({
+  const DeepSeekChat({
     required this.id,
     required this.name,
     required this.messageContent,
@@ -105,8 +105,8 @@ class KimiChat {
     this.updateTime,
   });
 
-  factory KimiChat.fromJson(Map<String, dynamic> json) {
-    return KimiChat(
+  factory DeepSeekChat.fromJson(Map<String, dynamic> json) {
+    return DeepSeekChat(
       id: BackendBase.readRequiredString(json, 'id'),
       name: BackendBase.readRequiredString(json, 'name'),
       messageContent: BackendBase.readString(json, 'messageContent') ?? '',

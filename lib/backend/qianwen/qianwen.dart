@@ -2,19 +2,18 @@ import 'package:dio/dio.dart';
 
 import '../backend_base.dart';
 
-/// Kimi 网页端 API 客户端（单例）。
+/// Qianwen (千问) 网页端 API 客户端（单例）。
 ///
 /// 当前实现重点模拟网页端会话列表接口：
-/// `/apiv2/kimi.chat.v1.ChatService/ListChats`。
-class Kimi extends BackendBase {
-  static const String _baseUrl = 'https://www.kimi.com';
-  static const String _listChatsPath =
-      '/apiv2/kimi.chat.v1.ChatService/ListChats';
+/// `/api/chat/sessions`。
+class Qianwen extends BackendBase {
+  static const String _baseUrl = 'https://qianwen.aliyun.com';
+  static const String _listChatsPath = '/api/chat/sessions';
 
-  static final Kimi _instance = Kimi._internal();
+  static final Qianwen _instance = Qianwen._internal();
 
   @override
-  final String name = 'Kimi';
+  final String name = 'Qianwen';
 
   @override
   String get baseUrl => _baseUrl;
@@ -22,12 +21,12 @@ class Kimi extends BackendBase {
   String? _accessToken;
 
   /// 生产代码使用的单例入口。
-  factory Kimi() => _instance;
+  factory Qianwen() => _instance;
 
-  Kimi._internal();
+  Qianwen._internal();
 
   /// 测试注入构造：允许传入自定义 [Dio]。
-  Kimi.test(Dio dio) : super.withDio(dio);
+  Qianwen.test(Dio dio) : super.withDio(dio);
 
   @override
   String? get accessToken => _accessToken;
@@ -40,44 +39,45 @@ class Kimi extends BackendBase {
   /// 拉取会话分页数据。
   ///
   /// 参数与网页端协议字段保持一致：
-  /// - [projectId] -> `project_id`
   /// - [pageSize] -> `page_size`
   /// - [pageToken] -> `page_token`
   /// - [query] -> `query`
-  Future<KimiChatsPage> getChats({
+  Future<QianwenChatsPage> getChats({
     int pageSize = 20,
     String pageToken = '',
-    String projectId = '',
     String query = '',
   }) async {
     if (pageSize <= 0) {
       throw ArgumentError.value(pageSize, 'pageSize', '必须大于 0');
     }
 
-    return post(_listChatsPath, <String, dynamic>{
-      'project_id': projectId,
-      'page_size': pageSize,
-      'page_token': pageToken,
-      'query': query,
-    }, KimiChatsPage.fromJson);
+    return post(
+      _listChatsPath,
+      <String, dynamic>{
+        'page_size': pageSize,
+        'page_token': pageToken,
+        'query': query,
+      },
+      QianwenChatsPage.fromJson,
+    );
   }
 }
 
-/// Kimi 会话分页结果。
-class KimiChatsPage {
-  final List<KimiChat> chats;
+/// Qianwen 会话分页结果。
+class QianwenChatsPage {
+  final List<QianwenChat> chats;
   final String nextPageToken;
 
-  const KimiChatsPage({required this.chats, required this.nextPageToken});
+  const QianwenChatsPage({required this.chats, required this.nextPageToken});
 
-  factory KimiChatsPage.fromJson(Map<String, dynamic> json) {
+  factory QianwenChatsPage.fromJson(Map<String, dynamic> json) {
     final rawChats = json['chats'];
     if (rawChats is! List) {
       throw const FormatException('字段 chats 必须是数组');
     }
 
     final chats = rawChats
-        .map((item) => KimiChat.fromJson(BackendBase.toStringKeyMap(item)))
+        .map((item) => QianwenChat.fromJson(BackendBase.toStringKeyMap(item)))
         .toList(growable: false);
 
     final token = json['nextPageToken'];
@@ -85,19 +85,19 @@ class KimiChatsPage {
       throw const FormatException('字段 nextPageToken 必须是字符串');
     }
 
-    return KimiChatsPage(chats: chats, nextPageToken: token as String? ?? '');
+    return QianwenChatsPage(chats: chats, nextPageToken: token as String? ?? '');
   }
 }
 
-/// Kimi 单条会话概要。
-class KimiChat {
+/// Qianwen 单条会话概要。
+class QianwenChat {
   final String id;
   final String name;
   final String messageContent;
   final String? createTime;
   final String? updateTime;
 
-  const KimiChat({
+  const QianwenChat({
     required this.id,
     required this.name,
     required this.messageContent,
@@ -105,8 +105,8 @@ class KimiChat {
     this.updateTime,
   });
 
-  factory KimiChat.fromJson(Map<String, dynamic> json) {
-    return KimiChat(
+  factory QianwenChat.fromJson(Map<String, dynamic> json) {
+    return QianwenChat(
       id: BackendBase.readRequiredString(json, 'id'),
       name: BackendBase.readRequiredString(json, 'name'),
       messageContent: BackendBase.readString(json, 'messageContent') ?? '',
