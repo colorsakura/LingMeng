@@ -30,7 +30,22 @@ export interface ChatSession {
   updatedAt: number; // timestamp in ms
 }
 
-// Message Model
+// Note Model
+export interface Note {
+  id: string;
+  title: string;
+  content: string; // Plate JSON stringified value
+  createdAt: number; // timestamp in ms
+  updatedAt: number; // timestamp in ms
+}
+
+export interface NoteRow {
+  id: string;
+  title: string;
+  content: string;
+  created_at: number;
+  updated_at: number;
+}
 export interface ChatMessage {
   id: string;
   sessionId: string;
@@ -72,6 +87,12 @@ export interface ElectronAPI {
     createMessage: (message: Omit<ChatMessage, 'createdAt'>) => Promise<ChatMessage>;
     deleteMessage: (id: string) => Promise<void>;
     deleteMessagesBySessionId: (sessionId: string) => Promise<void>;
+
+    getNotes: () => Promise<Note[]>;
+    getNote: (id: string) => Promise<Note | null>;
+    createNote: (note: Omit<Note, 'createdAt' | 'updatedAt'>) => Promise<Note>;
+    updateNote: (note: Note) => Promise<void>;
+    deleteNote: (id: string) => Promise<void>;
   };
 
   // Settings operations

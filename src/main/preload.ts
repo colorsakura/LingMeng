@@ -36,6 +36,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     deleteMessage: (id: string) => ipcRenderer.invoke('db:deleteMessage', id),
     deleteMessagesBySessionId: (sessionId: string) =>
       ipcRenderer.invoke('db:deleteMessagesBySessionId', sessionId),
+
+    getNotes: () => ipcRenderer.invoke('db:getNotes'),
+    getNote: (id: string) => ipcRenderer.invoke('db:getNote', id),
+    createNote: (note: { id: string; title: string; content: string }) =>
+      ipcRenderer.invoke('db:createNote', note),
+    updateNote: (note: {
+      id: string;
+      title: string;
+      content: string;
+      createdAt: number;
+      updatedAt: number;
+    }) => ipcRenderer.invoke('db:updateNote', note),
+    deleteNote: (id: string) => ipcRenderer.invoke('db:deleteNote', id),
   },
 
   // Settings operations

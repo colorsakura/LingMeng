@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Button, Tooltip } from 'antd';
-import { MessageOutlined, SettingOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons';
+import { MessageOutlined, SettingOutlined, PlusOutlined, SyncOutlined, FileTextOutlined } from '@ant-design/icons';
 import { useSessionStore, useSettingsStore } from '../../stores/settingsStore';
 import SessionList from './SessionList';
 import BackendSwitcher from './BackendSwitcher';
@@ -20,7 +20,12 @@ export default function Sidebar() {
   };
 
   // Menu key based on current route
-  const selectedKey = location.pathname === '/settings' ? 'settings' : 'chat';
+  const selectedKey =
+    location.pathname === '/settings'
+      ? 'settings'
+      : location.pathname === '/notes' || location.pathname.startsWith('/notes')
+      ? 'notes'
+      : 'chat';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -59,12 +64,18 @@ export default function Sidebar() {
           onClick={({ key }) => {
             if (key === 'chat') navigate('/');
             if (key === 'settings') navigate('/settings');
+            if (key === 'notes') navigate('/notes');
           }}
           items={[
             {
               key: 'chat',
               icon: <MessageOutlined />,
               label: '会话',
+            },
+            {
+              key: 'notes',
+              icon: <FileTextOutlined />,
+              label: '笔记',
             },
             {
               key: 'settings',

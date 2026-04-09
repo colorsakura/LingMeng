@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { BackendProvider, ChatSession, ChatMessage } from '@shared/types';
+import { BackendProvider, ChatSession, ChatMessage, Note } from '@shared/types';
 import { SyncService } from '../services/syncService';
 
 // Session Store
@@ -214,5 +214,71 @@ export const useChatStore = create<ChatState>((set) => ({
 
   clearStreamingContent: () => {
     set({ streamingContent: '', isStreaming: false });
+  },
+}));
+
+// Note Store
+interface NoteState {
+  notes: Note[];
+  currentNoteId: string | null;
+  loading: boolean;
+
+  loadNotes: () => Promise<void>;
+  createNote: (title: string, content: string) => Promise<Note>;
+  updateNote: (id: string, title?: string, content?: string) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
+  setCurrentNote: (id: string | null) => void;
+}
+
+export const useNoteStore = create<NoteState>((set, get) => ({
+  notes: [],
+  currentNoteId: null,
+  loading: false,
+
+  loadNotes: async () => {
+    set({ loading: true });
+    try {
+      const notes = await window.electronAPI.db.getNotes();
+      set({ notes, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+
+  createNote: async (title: string, content: string) => {
+    const id = crypto.randomUUID();
+    const note = await window.electronAPI.db.createNote({ id, title, content });
+    set((state) => ({
+      notes: [note, ...state.notes],
+      currentNoteId: id,
+    }));
+    return note;
+  },
+
+  updateNote: async (id: string, title?: string, content?: string) => {
+    const existing = get().notes.find((n) => n.id === id);
+    if (!existing) return;
+    const updated: Note = {
+      ...existing,
+      ...(title !== undefined && { title }),
+      ...(content !== undefined && { content }),
+      updatedAt: Date.now(),
+    };
+    await window.electronAPI.db.updateNote(updated);
+    set((state) => ({
+      notes: state.notes.map((n) => (n.id === id ? updated : n)),
+    }));
+  },
+
+  deleteNote: async (id: string) => {
+    await window.electronAPI.db.deleteNote(id);
+    set((state) => ({
+      notes: state.notes.filter((n) => n.id !== id),
+      currentNoteId: state.currentNoteId === id ? null : state.currentNoteId,
+    }));
+  },
+
+  setCurrentNote: (id: string | null) => {
+    set({ currentNoteId: id });
   },
 }));

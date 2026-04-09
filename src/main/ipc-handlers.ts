@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import Store from 'electron-store';
-import { SessionDao, MessageDao } from './database';
-import { BackendProvider, ChatSession, ChatMessage } from '../shared/types';
+import { SessionDao, MessageDao, NoteDao } from './database';
+import { BackendProvider, ChatSession, ChatMessage, Note } from '../shared/types';
 import { logger } from './logger';
 
 const store = new Store({
@@ -19,6 +19,7 @@ export function registerIpcHandlers(): void {
   registerSessionHandlers();
   registerMessageHandlers();
   registerSettingsHandlers();
+  registerNoteHandlers();
 
   logger.info('[IPC] All handlers registered');
 }
@@ -85,5 +86,27 @@ function registerSettingsHandlers(): void {
 
   ipcMain.handle('settings:setCurrentBackend', (_, provider: BackendProvider) => {
     store.set('currentBackend', provider);
+  });
+}
+
+function registerNoteHandlers(): void {
+  ipcMain.handle('db:getNotes', () => {
+    return NoteDao.getAll();
+  });
+
+  ipcMain.handle('db:getNote', (_, id: string) => {
+    return NoteDao.getById(id);
+  });
+
+  ipcMain.handle('db:createNote', (_, note: Omit<Note, 'createdAt' | 'updatedAt'>) => {
+    return NoteDao.insert(note);
+  });
+
+  ipcMain.handle('db:updateNote', (_, note: Note) => {
+    NoteDao.update(note);
+  });
+
+  ipcMain.handle('db:deleteNote', (_, id: string) => {
+    NoteDao.delete(id);
   });
 }

@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { app } from 'electron';
-import { ChatSession, ChatMessage, BackendProvider, SessionRow, MessageRow } from '../shared/types';
+import { ChatSession, ChatMessage, BackendProvider, SessionRow, MessageRow, Note, NoteRow } from '../shared/types';
 import { logger } from './logger';
 
 let db: Database.Database;
@@ -36,6 +36,14 @@ export function initDatabase() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id);
+
+    CREATE TABLE IF NOT EXISTS notes (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
   `);
 
   logger.info('[Database] Initialized at:', dbPath);
@@ -165,6 +173,58 @@ export class MessageDao {
       role: row.role as 'user' | 'assistant',
       content: row.content,
       createdAt: row.created_at,
+    };
+  }
+}
+
+// Note DAO
+export class NoteDao {
+  static getAll(): Note[] {
+    const rows = db.prepare(`
+      SELECT * FROM notes ORDER BY updated_at DESC
+    `).all() as NoteRow[];
+    return rows.map(NoteDao._rowToNote);
+  }
+
+  static getById(id: string): Note | null {
+    const row = db.prepare('SELECT * FROM notes WHERE id = ?').get(id) as NoteRow | undefined;
+    return row ? NoteDao._rowToNote(row) : null;
+  }
+
+  static insert(note: Omit<Note, 'createdAt' | 'updatedAt'>): Note {
+    const now = Date.now();
+    const fullNote: Note = {
+      ...note,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    db.prepare(`
+      INSERT INTO notes (id, title, content, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(fullNote.id, fullNote.title, fullNote.content, fullNote.createdAt, fullNote.updatedAt);
+
+    return fullNote;
+  }
+
+  static update(note: Note): void {
+    db.prepare(`
+      UPDATE notes SET title = ?, content = ?, updated_at = ?
+      WHERE id = ?
+    `).run(note.title, note.content, Date.now(), note.id);
+  }
+
+  static delete(id: string): void {
+    db.prepare('DELETE FROM notes WHERE id = ?').run(id);
+  }
+
+  private static _rowToNote(row: NoteRow): Note {
+    return {
+      id: row.id,
+      title: row.title,
+      content: row.content,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
     };
   }
 }
