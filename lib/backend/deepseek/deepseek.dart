@@ -36,12 +36,16 @@ class DeepSeek extends BackendBase {
     _accessToken = token.trim();
   }
 
+  /// 发送消息并获取回复。
+  Future<DeepSeekResponse> sendMessage({
+    required List<DeepSeekMessage> messages,
+    String model = 'deepseek-chat',
+  }) async {
+    // TODO: 实现实际的 DeepSeek 聊天 API 调用
+    throw UnimplementedError('DeepSeek sendMessage not implemented yet');
+  }
+
   /// 拉取会话分页数据。
-  ///
-  /// 参数与网页端协议字段保持一致：
-  /// - [pageSize] -> `page_size`
-  /// - [pageToken] -> `page_token`
-  /// - [query] -> `query`
   Future<DeepSeekChatsPage> getChats({
     int pageSize = 20,
     String pageToken = '',
@@ -51,16 +55,30 @@ class DeepSeek extends BackendBase {
       throw ArgumentError.value(pageSize, 'pageSize', '必须大于 0');
     }
 
-    return post(
-      _listChatsPath,
-      <String, dynamic>{
-        'page_size': pageSize,
-        'page_token': pageToken,
-        'query': query,
-      },
-      DeepSeekChatsPage.fromJson,
-    );
+    return post(_listChatsPath, <String, dynamic>{
+      'page_size': pageSize,
+      'page_token': pageToken,
+      'query': query,
+    }, DeepSeekChatsPage.fromJson);
   }
+}
+
+/// DeepSeek LLM 消息格式。
+class DeepSeekMessage {
+  final String role;
+  final String content;
+
+  const DeepSeekMessage({required this.role, required this.content});
+
+  Map<String, dynamic> toJson() => {'role': role, 'content': content};
+}
+
+/// DeepSeek LLM 响应。
+class DeepSeekResponse {
+  final String content;
+  final String? reasoning;
+
+  const DeepSeekResponse({required this.content, this.reasoning});
 }
 
 /// DeepSeek 会话分页结果。
@@ -85,7 +103,10 @@ class DeepSeekChatsPage {
       throw const FormatException('字段 nextPageToken 必须是字符串');
     }
 
-    return DeepSeekChatsPage(chats: chats, nextPageToken: token as String? ?? '');
+    return DeepSeekChatsPage(
+      chats: chats,
+      nextPageToken: token as String? ?? '',
+    );
   }
 }
 

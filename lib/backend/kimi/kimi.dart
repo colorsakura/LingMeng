@@ -4,12 +4,15 @@ import '../backend_base.dart';
 
 /// Kimi 网页端 API 客户端（单例）。
 ///
-/// 当前实现重点模拟网页端会话列表接口：
-/// `/apiv2/kimi.chat.v1.ChatService/ListChats`。
+/// API 文档：
+/// - 会话列表: POST /apiv2/kimi.gateway.chat.v1.ChatService/ListChats
+/// - 会话详情: POST /apiv2/kimi.gateway.chat.v1.ChatService/GetChat
 class Kimi extends BackendBase {
   static const String _baseUrl = 'https://www.kimi.com';
   static const String _listChatsPath =
-      '/apiv2/kimi.chat.v1.ChatService/ListChats';
+      '/apiv2/kimi.gateway.chat.v1.ChatService/ListChats';
+  static const String _getChatPath =
+      '/apiv2/kimi.gateway.chat.v1.ChatService/GetChat';
 
   static final Kimi _instance = Kimi._internal();
 
@@ -61,6 +64,46 @@ class Kimi extends BackendBase {
       'query': query,
     }, KimiChatsPage.fromJson);
   }
+
+  /// 发送消息并获取回复。
+  ///
+  /// [messages] - 对话历史消息
+  /// [model] - 模型名称
+  Future<LlmResponse> sendMessage({
+    required List<LlmMessage> messages,
+    String model = 'moonshot-v1-8k',
+  }) async {
+    // TODO: 实现实际的 Kimi 聊天 API 调用
+    // 当前为占位实现
+    throw UnimplementedError('Kimi sendMessage not implemented yet');
+  }
+
+  /// 获取会话详情（包含消息列表）。
+  ///
+  /// [chatId] - 会话 ID
+  Future<KimiChatDetail> getChatDetail({required String chatId}) async {
+    return post(_getChatPath, <String, dynamic>{
+      'chat_id': chatId,
+    }, KimiChatDetail.fromJson);
+  }
+}
+
+/// Kimi LLM 消息格式。
+class LlmMessage {
+  final String role;
+  final String content;
+
+  const LlmMessage({required this.role, required this.content});
+
+  Map<String, dynamic> toJson() => {'role': role, 'content': content};
+}
+
+/// Kimi LLM 响应。
+class LlmResponse {
+  final String content;
+  final String? reasoning;
+
+  const LlmResponse({required this.content, this.reasoning});
 }
 
 /// Kimi 会话分页结果。
@@ -112,6 +155,44 @@ class KimiChat {
       messageContent: BackendBase.readString(json, 'messageContent') ?? '',
       createTime: BackendBase.readString(json, 'createTime'),
       updateTime: BackendBase.readString(json, 'updateTime'),
+    );
+  }
+}
+
+/// Kimi 会话详情（包含消息列表）。
+class KimiChatDetail {
+  final String id;
+  final String name;
+  final String messageContent; // 最后一条消息的摘要
+  final Map<String, dynamic>? lastRequest; // 最后请求对象
+  final String? createTime;
+  final String? updateTime;
+
+  const KimiChatDetail({
+    required this.id,
+    required this.name,
+    required this.messageContent,
+    this.lastRequest,
+    this.createTime,
+    this.updateTime,
+  });
+
+  factory KimiChatDetail.fromJson(Map<String, dynamic> json) {
+    // 响应格式是 { "chat": {...} }
+    final chat = json['chat'] ?? json;
+
+    Map<String, dynamic>? lastRequest;
+    if (chat['lastRequest'] != null && chat['lastRequest'] is Map) {
+      lastRequest = Map<String, dynamic>.from(chat['lastRequest']);
+    }
+
+    return KimiChatDetail(
+      id: BackendBase.readRequiredString(chat, 'id'),
+      name: BackendBase.readRequiredString(chat, 'name'),
+      messageContent: BackendBase.readString(chat, 'messageContent') ?? '',
+      lastRequest: lastRequest,
+      createTime: BackendBase.readString(chat, 'createTime'),
+      updateTime: BackendBase.readString(chat, 'updateTime'),
     );
   }
 }

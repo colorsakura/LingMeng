@@ -36,12 +36,16 @@ class Doubao extends BackendBase {
     _accessToken = token.trim();
   }
 
+  /// 发送消息并获取回复。
+  Future<DoubaoResponse> sendMessage({
+    required List<DoubaoMessage> messages,
+    String model = 'doubao-pro',
+  }) async {
+    // TODO: 实现实际的 Doubao 聊天 API 调用
+    throw UnimplementedError('Doubao sendMessage not implemented yet');
+  }
+
   /// 拉取会话分页数据。
-  ///
-  /// 参数与网页端协议字段保持一致：
-  /// - [pageSize] -> `page_size`
-  /// - [pageToken] -> `page_token`
-  /// - [query] -> `query`
   Future<DoubaoChatsPage> getChats({
     int pageSize = 20,
     String pageToken = '',
@@ -51,16 +55,30 @@ class Doubao extends BackendBase {
       throw ArgumentError.value(pageSize, 'pageSize', '必须大于 0');
     }
 
-    return post(
-      _listChatsPath,
-      <String, dynamic>{
-        'page_size': pageSize,
-        'page_token': pageToken,
-        'query': query,
-      },
-      DoubaoChatsPage.fromJson,
-    );
+    return post(_listChatsPath, <String, dynamic>{
+      'page_size': pageSize,
+      'page_token': pageToken,
+      'query': query,
+    }, DoubaoChatsPage.fromJson);
   }
+}
+
+/// Doubao LLM 消息格式。
+class DoubaoMessage {
+  final String role;
+  final String content;
+
+  const DoubaoMessage({required this.role, required this.content});
+
+  Map<String, dynamic> toJson() => {'role': role, 'content': content};
+}
+
+/// Doubao LLM 响应。
+class DoubaoResponse {
+  final String content;
+  final String? reasoning;
+
+  const DoubaoResponse({required this.content, this.reasoning});
 }
 
 /// Doubao 会话分页结果。

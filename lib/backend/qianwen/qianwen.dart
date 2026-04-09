@@ -36,12 +36,16 @@ class Qianwen extends BackendBase {
     _accessToken = token.trim();
   }
 
+  /// 发送消息并获取回复。
+  Future<QianwenResponse> sendMessage({
+    required List<QianwenMessage> messages,
+    String model = 'qwen-turbo',
+  }) async {
+    // TODO: 实现实际的 Qianwen 聊天 API 调用
+    throw UnimplementedError('Qianwen sendMessage not implemented yet');
+  }
+
   /// 拉取会话分页数据。
-  ///
-  /// 参数与网页端协议字段保持一致：
-  /// - [pageSize] -> `page_size`
-  /// - [pageToken] -> `page_token`
-  /// - [query] -> `query`
   Future<QianwenChatsPage> getChats({
     int pageSize = 20,
     String pageToken = '',
@@ -51,16 +55,30 @@ class Qianwen extends BackendBase {
       throw ArgumentError.value(pageSize, 'pageSize', '必须大于 0');
     }
 
-    return post(
-      _listChatsPath,
-      <String, dynamic>{
-        'page_size': pageSize,
-        'page_token': pageToken,
-        'query': query,
-      },
-      QianwenChatsPage.fromJson,
-    );
+    return post(_listChatsPath, <String, dynamic>{
+      'page_size': pageSize,
+      'page_token': pageToken,
+      'query': query,
+    }, QianwenChatsPage.fromJson);
   }
+}
+
+/// Qianwen LLM 消息格式。
+class QianwenMessage {
+  final String role;
+  final String content;
+
+  const QianwenMessage({required this.role, required this.content});
+
+  Map<String, dynamic> toJson() => {'role': role, 'content': content};
+}
+
+/// Qianwen LLM 响应。
+class QianwenResponse {
+  final String content;
+  final String? reasoning;
+
+  const QianwenResponse({required this.content, this.reasoning});
 }
 
 /// Qianwen 会话分页结果。
@@ -85,7 +103,10 @@ class QianwenChatsPage {
       throw const FormatException('字段 nextPageToken 必须是字符串');
     }
 
-    return QianwenChatsPage(chats: chats, nextPageToken: token as String? ?? '');
+    return QianwenChatsPage(
+      chats: chats,
+      nextPageToken: token as String? ?? '',
+    );
   }
 }
 

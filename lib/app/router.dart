@@ -1,10 +1,12 @@
 import 'package:go_router/go_router.dart';
 import 'package:lingmeng/pages/chat/view.dart';
 import 'package:lingmeng/pages/main/view.dart';
+import 'package:lingmeng/pages/settings/view.dart';
 
 abstract final class AppRoute {
   static const String home = "/";
   static const String chat = "/chat/:id";
+  static const String settings = "/settings";
 }
 
 abstract final class AppRouter {
@@ -19,9 +21,15 @@ abstract final class AppRouter {
       GoRoute(
         path: AppRoute.chat,
         pageBuilder: (context, state) {
-            final chatID = state.pathParameters['id'];
-            return const NoTransitionPage(child: ChatPage());
-        }
+          final sessionId = state.pathParameters['id'] ?? '';
+          return NoTransitionPage(child: ChatPage(sessionId: sessionId));
+        },
+      ),
+
+      GoRoute(
+        path: AppRoute.settings,
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: SettingsPage()),
       ),
     ],
   );
