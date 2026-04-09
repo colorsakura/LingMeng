@@ -1,0 +1,78 @@
+{
+  "name": "lingmeng",
+  "version": "1.0.0",
+  "description": "A cross-platform AI chat client",
+  "type": "module",
+  "main": "dist-electron/main/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:dev": "vite build && electron .",
+    "dist": "npm run build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "electron",
+    "ai",
+    "chat",
+    "kimi",
+    "deepseek"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
+    "axios": "^1.15.0",
+    "better-sqlite3": "^12.8.0",
+    "electron-log": "^5.4.3",
+    "electron-store": "^11.0.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.1.1",
+    "remark-gfm": "^4.0.1",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^25.5.2",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.2",
+    "uuid": "^13.0.0",
+    "vite": "^8.0.8",
+    "vite-plugin-electron": "^0.29.1",
+    "vite-plugin-electron-renderer": "^0.14.6"
+  },
+  "build": {
+    "appId": "com.lingmeng.app",
+    "productName": "灵梦",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png"
+    }
+  }
+}
