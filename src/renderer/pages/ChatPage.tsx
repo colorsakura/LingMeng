@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { message as antMessage } from 'antd';
 import { useSessionStore, useMessageStore, useSettingsStore } from '../stores/settingsStore';
 import { MessageList, ChatInput } from '../components/Chat';
@@ -7,9 +7,8 @@ import { getBackend, BackendException, fetchRemoteMessages, extractRemoteId } fr
 
 export default function ChatPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const navigate = useNavigate();
 
-  const { sessions, setCurrentSession, updateSessionLastMessage } = useSessionStore();
+  const { setCurrentSession, updateSessionLastMessage } = useSessionStore();
   const { messages, loading, error, loadMessages, addMessage, clearMessages } = useMessageStore();
   const { currentBackend, tokens } = useSettingsStore();
 
@@ -66,15 +65,12 @@ export default function ChatPage() {
     }
   };
 
-  const currentSession = sessions.find((s) => s.id === sessionId);
-
   const handleSend = useCallback(async (content: string) => {
     if (!sessionId || sendingRef.current) return;
 
     const token = tokens[currentBackend];
     if (!token) {
       showMessage('info', `请先在设置中配置 ${currentBackend} 的 API Token`);
-      navigate('/settings');
       return;
     }
 
@@ -133,36 +129,7 @@ export default function ChatPage() {
       sendingRef.current = false;
       setIsSending(false);
     }
-  }, [sessionId, currentBackend, tokens, updateSessionLastMessage, addMessage, navigate, showMessage]);
-
-  if (sessionId && !currentSession && !loading) {
-    return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
-        <div style={{ textAlign: 'center' }}>
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d9d9d9" strokeWidth="1.5" style={{ margin: '0 auto' }}>
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
-          </svg>
-          <div style={{ fontSize: 16, color: '#8c8c8c', marginTop: 16 }}>会话不存在</div>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              marginTop: 16,
-              padding: '8px 16px',
-              background: '#1677ff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
-          >
-            返回主页
-          </button>
-        </div>
-      </div>
-    );
-  }
+  }, [sessionId, currentBackend, tokens, updateSessionLastMessage, addMessage, showMessage]);
 
   return (
     <div className="chat-page">
