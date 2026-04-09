@@ -22,7 +22,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@tailwindcss/typography": "^0.5.19",
+    "@ant-design/icons": "^6.1.1",
+    "antd": "^6.3.5",
     "axios": "^1.15.0",
     "better-sqlite3": "^12.8.0",
     "electron-log": "^5.4.3",
@@ -36,7 +37,6 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.3",
-    "@tailwindcss/vite": "^4.2.2",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^25.5.2",
     "@types/react": "^19.0.7",

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Card, Input, Button, Tag, message } from 'antd';
 import { BackendProvider, BackendProviderDisplayNames, BackendProviderColors } from '@shared/types';
 import { useSettingsStore } from '../../stores/settingsStore';
 
@@ -9,7 +10,6 @@ interface TokenCardProps {
 export default function TokenCard({ provider }: TokenCardProps) {
   const [token, setToken] = useState('');
   const [saving, setSaving] = useState(false);
-  const [showToken, setShowToken] = useState(false);
   const { tokens, setToken: saveToken } = useSettingsStore();
 
   const currentToken = tokens[provider];
@@ -22,6 +22,9 @@ export default function TokenCard({ provider }: TokenCardProps) {
     try {
       await saveToken(provider, token.trim());
       setToken('');
+      message.success('Token 保存成功');
+    } catch {
+      message.error('保存失败');
     } finally {
       setSaving(false);
     }
@@ -40,71 +43,70 @@ export default function TokenCard({ provider }: TokenCardProps) {
     }
   };
 
+  const initials: Record<BackendProvider, string> = {
+    [BackendProvider.Kimi]: 'K',
+    [BackendProvider.DeepSeek]: 'DS',
+    [BackendProvider.Doubao]: 'D',
+    [BackendProvider.Qianwen]: 'Q',
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
+    <Card
+      className="token-card"
+      styles={{ body: { padding: 20 } }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-            style={{ backgroundColor: color }}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: color,
+              color: '#fff',
+              fontWeight: 'bold',
+              fontSize: 14,
+            }}
           >
-            {provider === BackendProvider.Kimi && 'K'}
-            {provider === BackendProvider.DeepSeek && 'DS'}
-            {provider === BackendProvider.Doubao && 'D'}
-            {provider === BackendProvider.Qianwen && 'Q'}
+            {initials[provider]}
           </div>
-          <span className="font-medium text-gray-800">
-            {BackendProviderDisplayNames[provider]}
-          </span>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 15, color: '#262626' }}>
+              {BackendProviderDisplayNames[provider]}
+            </div>
+          </div>
         </div>
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${
-            hasToken ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-          }`}
-        >
+        <Tag color={hasToken ? 'success' : 'warning'}>
           {hasToken ? '已配置' : '未配置'}
-        </span>
+        </Tag>
       </div>
 
-      <div className="space-y-3">
-        <div className="relative">
-          <input
-            type={showToken ? 'text' : 'password'}
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder={hasToken ? '已保存，新token覆盖旧token' : '输入 API Token'}
-            className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
-          <button
-            type="button"
-            onClick={() => setShowToken(!showToken)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-          >
-            {showToken ? (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            )}
-          </button>
-        </div>
-
-        <button
-          onClick={handleSave}
-          disabled={!token.trim() || saving}
-          className="w-full py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {saving ? '保存中...' : '保存 Token'}
-        </button>
-
-        <p className="text-xs text-gray-500 leading-relaxed">
-          {getInstructions()}
-        </p>
+      <div style={{ marginBottom: 12 }}>
+        <Input.Password
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder={hasToken ? '已保存，输入新token覆盖' : '输入 API Token'}
+          style={{ borderRadius: 8 }}
+        />
       </div>
-    </div>
+
+      <Button
+        type="primary"
+        onClick={handleSave}
+        disabled={!token.trim()}
+        loading={saving}
+        block
+        style={{ borderRadius: 8 }}
+      >
+        保存 Token
+      </Button>
+
+      <div style={{ marginTop: 12, fontSize: 12, color: '#8c8c8c', lineHeight: 1.6 }}>
+        {getInstructions()}
+      </div>
+    </Card>
   );
 }

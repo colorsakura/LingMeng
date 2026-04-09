@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { Spin, Empty, Button } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage } from '@shared/types';
@@ -13,7 +14,6 @@ interface MessageListProps {
 export default function MessageList({ messages, loading, error, onRetry }: MessageListProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -22,30 +22,25 @@ export default function MessageList({ messages, loading, error, onRetry }: Messa
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-gray-500 mt-2">正在加载会话内容...</p>
-        </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Spin tip="正在加载会话内容..." />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <svg className="w-12 h-12 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff4d4f" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
           </svg>
-          <p className="text-sm text-red-500 mt-2">{error}</p>
+          <div style={{ color: '#ff4d4f', marginTop: 12 }}>{error}</div>
           {onRetry && (
-            <button
-              onClick={onRetry}
-              className="mt-3 px-4 py-2 text-sm bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
-            >
+            <Button type="primary" onClick={onRetry} style={{ marginTop: 12, borderRadius: 8 }}>
               重试
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -54,105 +49,86 @@ export default function MessageList({ messages, loading, error, onRetry }: Messa
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          <p className="text-base font-medium text-gray-600 mt-4">开始对话吧</p>
-          <p className="text-sm text-gray-400 mt-1">发送消息开始聊天</p>
-        </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Empty
+          description={
+            <div>
+              <div style={{ fontSize: 15, color: '#595959', fontWeight: 500 }}>开始对话吧</div>
+              <div style={{ fontSize: 13, color: '#8c8c8c', marginTop: 4 }}>发送消息开始聊天</div>
+            </div>
+          }
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
       </div>
     );
   }
 
   return (
-    <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+    <div ref={listRef} className="message-list">
       {messages.map((message) => (
-        <div key={message.id}>
-          <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
-              message.role === 'user'
-                ? 'bg-primary-500 text-white'
-                : 'bg-white border border-gray-200 text-gray-800'
-            }`}>
-              {message.role === 'user' ? (
-                // User messages: plain text
-                <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+        <div key={message.id} className={`message-wrapper ${message.role}`}>
+          <div className={`message-bubble ${message.role}`}>
+            {message.role === 'user' ? (
+              <div className="message-content">{message.content}</div>
+            ) : (
+              <div className="markdown-content">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code: ({ className, children, ...props }) => {
+                      const match = /language-(\w+)/.exec(className || '');
+                      const isInline = !match && !className;
+                      return isInline ? (
+                        <code style={{ background: '#f5f5f5', padding: '2px 6px', borderRadius: 4, fontFamily: 'monospace', fontSize: 13, color: '#1677ff' }} {...props}>
+                          {children}
+                        </code>
+                      ) : (
+                        <pre style={{ background: '#1e1e1e', color: '#d4d4d4', padding: 12, borderRadius: 8, overflow: 'auto', margin: '8px 0' }}>
+                          <code {...props}>{children}</code>
+                        </pre>
+                      );
+                    },
+                    p: ({ children }) => (
+                      <p style={{ margin: '0 0 8px 0' }}>{children}</p>
+                    ),
+                    a: ({ href, children }) => (
+                      <a href={href} style={{ color: '#1677ff' }} target="_blank" rel="noopener noreferrer">
+                        {children}
+                      </a>
+                    ),
+                    ul: ({ children }) => (
+                      <ul style={{ paddingLeft: 20, margin: '8px 0' }}>{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol style={{ paddingLeft: 20, margin: '8px 0' }}>{children}</ol>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote style={{ borderLeft: '3px solid #d9d9d9', paddingLeft: 12, color: '#8c8c8c', fontStyle: 'italic', margin: '8px 0' }}>
+                        {children}
+                      </blockquote>
+                    ),
+                    h1: ({ children }) => <h1 style={{ fontSize: 20, fontWeight: 700, margin: '12px 0 8px' }}>{children}</h1>,
+                    h2: ({ children }) => <h2 style={{ fontSize: 17, fontWeight: 700, margin: '10px 0 6px' }}>{children}</h2>,
+                    h3: ({ children }) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '8px 0 4px' }}>{children}</h3>,
+                    table: ({ children }) => (
+                      <table style={{ borderCollapse: 'collapse', width: '100%', margin: '8px 0', fontSize: 13 }}>
+                        {children}
+                      </table>
+                    ),
+                    th: ({ children }) => (
+                      <th style={{ border: '1px solid #d9d9d9', padding: '6px 10px', background: '#fafafa', fontWeight: 600 }}>{children}</th>
+                    ),
+                    td: ({ children }) => (
+                      <td style={{ border: '1px solid #d9d9d9', padding: '6px 10px' }}>{children}</td>
+                    ),
+                  }}
+                >
                   {message.content}
-                </p>
-              ) : (
-                // AI messages: render markdown
-                <div className="markdown-content text-sm leading-relaxed">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      // Style code blocks
-                      code: ({ className, children, ...props }) => {
-                        const match = /language-(\w+)/.exec(className || '');
-                        const isInline = !match && !className;
-                        return isInline ? (
-                          <code className="px-1 py-0.5 bg-gray-100 rounded text-primary-600 text-xs" {...props}>
-                            {children}
-                          </code>
-                        ) : (
-                          <code className="block p-3 bg-gray-900 text-gray-100 rounded-lg text-xs overflow-x-auto" {...props}>
-                            {children}
-                          </code>
-                        );
-                      },
-                      // Style paragraphs
-                      p: ({ children }) => (
-                        <p className="mb-2 last:mb-0 whitespace-pre-wrap break-words">{children}</p>
-                      ),
-                      // Style links
-                      a: ({ href, children }) => (
-                        <a href={href} className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                          {children}
-                        </a>
-                      ),
-                      // Style lists
-                      ul: ({ children }) => (
-                        <ul className="list-disc list-inside mb-2">{children}</ul>
-                      ),
-                      ol: ({ children }) => (
-                        <ol className="list-decimal list-inside mb-2">{children}</ol>
-                      ),
-                      // Style blockquotes
-                      blockquote: ({ children }) => (
-                        <blockquote className="border-l-2 border-gray-300 pl-3 italic text-gray-600 mb-2">
-                          {children}
-                        </blockquote>
-                      ),
-                      // Style headings
-                      h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
-                      h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
-                      // Style table
-                      table: ({ children }) => (
-                        <table className="border-collapse border border-gray-300 mb-2 text-xs">
-                          {children}
-                        </table>
-                      ),
-                      th: ({ children }) => (
-                        <th className="border border-gray-300 bg-gray-100 px-2 py-1">{children}</th>
-                      ),
-                      td: ({ children }) => (
-                        <td className="border border-gray-300 px-2 py-1">{children}</td>
-                      ),
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                </div>
-              )}
-              <p className={`text-[10px] mt-1 ${
-                message.role === 'user' ? 'text-primary-200' : 'text-gray-400'
-              }`}>
-                {new Date(message.createdAt).toLocaleTimeString()}
-              </p>
+                </ReactMarkdown>
+              </div>
+            )}
+            <div className="message-time" style={{ color: message.role === 'user' ? 'rgba(255,255,255,0.6)' : '#bfbfbf' }}>
+              {new Date(message.createdAt).toLocaleTimeString()}
             </div>
           </div>
         </div>
