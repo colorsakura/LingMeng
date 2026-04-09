@@ -10,6 +10,9 @@ const store = new Store({
     tokens: {},
     currentBackend: BackendProvider.Kimi,
   },
+  // Encrypt stored data using OS keychain (safeStorage)
+  // This protects API tokens from being read if the machine is compromised
+  encryptionKey: 'lingmeng-v1',
 });
 
 export function registerIpcHandlers(): void {

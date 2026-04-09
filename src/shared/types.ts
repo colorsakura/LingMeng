@@ -81,13 +81,6 @@ export interface ElectronAPI {
     getCurrentBackend: () => Promise<BackendProvider>;
     setCurrentBackend: (provider: BackendProvider) => Promise<void>;
   };
-
-  // AI API operations
-  api: {
-    fetchSessions: (provider: BackendProvider) => Promise<ChatSession[]>;
-    fetchMessages: (provider: BackendProvider, remoteChatId: string, sessionId: string) => Promise<ChatMessage[]>;
-    sendMessage: (provider: BackendProvider, sessionId: string, content: string, token: string) => Promise<ChatMessage>;
-  };
 }
 
 declare global {

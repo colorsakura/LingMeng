@@ -48,14 +48,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setCurrentBackend: (provider: BackendProvider) =>
       ipcRenderer.invoke('settings:setCurrentBackend', provider),
   },
-
-  // AI API operations
-  api: {
-    fetchSessions: (provider: BackendProvider) =>
-      ipcRenderer.invoke('api:fetchSessions', provider),
-    fetchMessages: (provider: BackendProvider, remoteChatId: string, sessionId: string) =>
-      ipcRenderer.invoke('api:fetchMessages', provider, remoteChatId, sessionId),
-    sendMessage: (provider: BackendProvider, sessionId: string, content: string, token: string) =>
-      ipcRenderer.invoke('api:sendMessage', provider, sessionId, content, token),
-  },
 });

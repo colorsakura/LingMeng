@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSessionStore, useMessageStore, useSettingsStore } from '../stores/settingsStore';
 import { MessageList, ChatInput } from '../components/Chat';
@@ -12,6 +12,16 @@ export default function ChatPage() {
   const { messages, loading, error, loadMessages, addMessage, clearMessages } = useMessageStore();
   const { currentBackend, tokens } = useSettingsStore();
 
+  const [toast, setToast] = useState<{ type: 'error' | 'info'; message: string } | null>(null);
+  // Use ref for sending guard to avoid stale closure issues
+  const sendingRef = useRef(false);
+  const [isSending, setIsSending] = useState(false); // triggers re-render for disabled prop
+
+  const showToast = useCallback((type: 'error' | 'info', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4000);
+  }, []);
+
   // Load messages when session changes
   useEffect(() => {
     if (sessionId) {
@@ -20,23 +30,25 @@ export default function ChatPage() {
     } else {
       clearMessages();
     }
-  }, [sessionId, setCurrentSession, clearMessages]);
+  }, [sessionId, setCurrentSession]);
 
   // Load messages from local DB, and fetch from remote if empty
   const loadMessagesAndSync = async (sid: string) => {
     // First load from local database
     await loadMessages(sid);
 
-    // Use getState to get current messages after load
+    // Use getState to avoid stale closure for sessions and tokens
     const currentMessages = useMessageStore.getState().messages;
+    const currentSessions = useSessionStore.getState().sessions;
+    const currentTokens = useSettingsStore.getState().tokens;
 
     // Find the session to get backend info
-    const session = sessions.find((s) => s.id === sid);
+    const session = currentSessions.find((s) => s.id === sid);
     if (!session) return;
 
     // If no local messages, try to fetch from remote
     if (currentMessages.length === 0) {
-      const token = tokens[session.backend];
+      const token = currentTokens[session.backend];
       if (!token) return;
 
       try {
@@ -53,8 +65,8 @@ export default function ChatPage() {
           await window.electronAPI.db.createMessage(msg);
           addMessage(msg);
         }
-      } catch (error) {
-        console.error('[ChatPage] Failed to fetch remote messages:', error);
+      } catch (err) {
+        console.error('[ChatPage] Failed to fetch remote messages:', err);
       }
     }
   };
@@ -63,25 +75,34 @@ export default function ChatPage() {
   const currentSession = sessions.find((s) => s.id === sessionId);
 
   const handleSend = useCallback(async (content: string) => {
-    if (!sessionId) return;
+    if (!sessionId || sendingRef.current) return;
 
     const token = tokens[currentBackend];
     if (!token) {
-      alert(`请先在设置中配置 ${currentBackend} 的 API Token`);
+      showToast('info', `请先在设置中配置 ${currentBackend} 的 API Token`);
       navigate('/settings');
       return;
     }
 
-    try {
-      // Create user message
-      const userMessage = {
-        id: crypto.randomUUID(),
-        sessionId,
-        role: 'user' as const,
-        content,
-        createdAt: Date.now(),
-      };
+    sendingRef.current = true;
+    setIsSending(true);
 
+    // Get fresh messages via getState to avoid stale closure
+    const conversationHistory = useMessageStore.getState().messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    // Create user message
+    const userMessage = {
+      id: crypto.randomUUID(),
+      sessionId,
+      role: 'user' as const,
+      content,
+      createdAt: Date.now(),
+    };
+
+    try {
       // Save to database and add to UI
       await window.electronAPI.db.createMessage(userMessage);
       addMessage(userMessage);
@@ -92,12 +113,6 @@ export default function ChatPage() {
       // Send to AI backend
       const backend = getBackend(currentBackend);
       backend.setAccessToken(token);
-
-      // Prepare conversation history for API
-      const conversationHistory = messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
 
       // Call AI API
       const response = await backend.sendMessage(
@@ -121,14 +136,20 @@ export default function ChatPage() {
 
       // Update session last message
       await updateSessionLastMessage(sessionId, response.substring(0, 50));
-    } catch (error) {
-      if (error instanceof BackendException) {
-        alert(`发送失败: ${error.message}`);
+    } catch (err) {
+      // Rollback: remove the user message we just created
+      await window.electronAPI.db.deleteMessage(userMessage.id);
+
+      if (err instanceof BackendException) {
+        showToast('error', `发送失败: ${err.message}`);
       } else {
-        alert(`发送失败: ${(error as Error).message}`);
+        showToast('error', `发送失败: ${(err as Error).message}`);
       }
+    } finally {
+      sendingRef.current = false;
+      setIsSending(false);
     }
-  }, [sessionId, currentBackend, tokens, messages, updateSessionLastMessage, addMessage, navigate]);
+  }, [sessionId, currentBackend, tokens, updateSessionLastMessage, addMessage, navigate, showToast]);
 
   // Session not found
   if (sessionId && !currentSession && !loading) {
@@ -151,7 +172,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden relative">
       {/* Chat messages */}
       <MessageList
         messages={messages}
@@ -168,7 +189,18 @@ export default function ChatPage() {
       </div>
 
       {/* Chat input */}
-      <ChatInput onSend={handleSend} disabled={!sessionId} />
+      <ChatInput onSend={handleSend} disabled={!sessionId || isSending} />
+
+      {/* Toast notification */}
+      {toast && (
+        <div className={`absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium z-10 ${
+          toast.type === 'error'
+            ? 'bg-red-500 text-white'
+            : 'bg-blue-500 text-white'
+        }`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

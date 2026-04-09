@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSessionStore } from '../../stores/settingsStore';
 import SessionTile from './SessionTile';
+import { ChatSession } from '@shared/types';
 
 export default function SessionList() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { sessions, loading, error, deleteSession } = useSessionStore();
+  const [pendingDelete, setPendingDelete] = useState<ChatSession | null>(null);
 
   if (loading) {
     return (
@@ -38,17 +41,59 @@ export default function SessionList() {
     );
   }
 
+  const handleDelete = (session: ChatSession) => {
+    setPendingDelete(session);
+  };
+
+  const confirmDelete = async () => {
+    if (pendingDelete) {
+      await deleteSession(pendingDelete.id);
+      if (sessionId === pendingDelete.id) {
+        navigate('/');
+      }
+      setPendingDelete(null);
+    }
+  };
+
   return (
-    <div className="session-list">
-      {sessions.map((session) => (
-        <SessionTile
-          key={session.id}
-          session={session}
-          isSelected={sessionId === session.id}
-          onTap={() => navigate(`/chat/${session.id}`)}
-          onDelete={() => deleteSession(session.id)}
-        />
-      ))}
-    </div>
+    <>
+      <div className="session-list">
+        {sessions.map((session) => (
+          <SessionTile
+            key={session.id}
+            session={session}
+            isSelected={sessionId === session.id}
+            onTap={() => navigate(`/chat/${session.id}`)}
+            onDelete={() => handleDelete(session)}
+          />
+        ))}
+      </div>
+
+      {/* Delete confirmation dialog */}
+      {pendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-5 w-72 text-center">
+            <h3 className="text-base font-semibold text-gray-900 mb-1">删除会话</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              确定要删除「{pendingDelete.name}」吗？此操作不可撤销。
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPendingDelete(null)}
+                className="flex-1 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+              >
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
