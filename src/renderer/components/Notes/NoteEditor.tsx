@@ -13,7 +13,6 @@ import {
   H3Plugin,
 } from '@platejs/basic-nodes/react';
 import { useNoteStore } from '../../stores/settingsStore';
-import { Button, Space, Divider } from 'antd';
 
 interface NoteEditorProps {
   noteId: string;
@@ -77,8 +76,14 @@ export default function NoteEditor({ noteId, initialTitle, initialContent }: Not
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Title input */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
+      {/* Title */}
+      <div
+        style={{
+          padding: '20px 24px 0',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--bg-content)',
+        }}
+      >
         <input
           type="text"
           defaultValue={initialTitle}
@@ -88,160 +93,56 @@ export default function NoteEditor({ noteId, initialTitle, initialContent }: Not
             width: '100%',
             border: 'none',
             outline: 'none',
-            fontSize: 18,
-            fontWeight: 600,
+            fontSize: 22,
+            fontWeight: 700,
             background: 'transparent',
-            color: '#262626',
+            color: 'var(--text-strong)',
+            lineHeight: 1.3,
+            paddingBottom: 14,
           }}
         />
       </div>
 
       {/* Toolbar */}
-      <div
-        style={{
-          padding: '4px 12px',
-          borderBottom: '1px solid #f0f0f0',
-          background: '#fafafa',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-        }}
-      >
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleMark('bold');
-            }}
-            style={{ minWidth: 32, fontWeight: 700 }}
-          >
-            B
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleMark('italic');
-            }}
-            style={{ minWidth: 32, fontStyle: 'italic' }}
-          >
-            I
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleMark('underline');
-            }}
-            style={{ minWidth: 32, textDecoration: 'underline' }}
-          >
-            U
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleMark('strikethrough');
-            }}
-            style={{ minWidth: 32, textDecoration: 'line-through' }}
-          >
-            S
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleMark('code');
-            }}
-            style={{ minWidth: 32, fontFamily: 'monospace' }}
-          >
-            {'</>'}
-          </Button>
-        </Space>
-
-        <Divider type="vertical" style={{ margin: '0 4px' }} />
-
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleBlock('h1');
-            }}
-            style={{ minWidth: 32, fontWeight: 700 }}
-          >
-            H1
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleBlock('h2');
-            }}
-            style={{ minWidth: 32, fontWeight: 700 }}
-          >
-            H2
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleBlock('h3');
-            }}
-            style={{ minWidth: 32, fontWeight: 700 }}
-          >
-            H3
-          </Button>
-        </Space>
-
-        <Divider type="vertical" style={{ margin: '0 4px' }} />
-
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              toggleBlock('blockquote');
-            }}
-            style={{ minWidth: 32 }}
-          >
-            &ldquo;
-          </Button>
-        </Space>
+      <div className="note-editor-toolbar">
+        <button className="note-editor-toolbar-btn" title="粗体" onMouseDown={(e) => { e.preventDefault(); toggleMark('bold'); }}><strong>B</strong></button>
+        <button className="note-editor-toolbar-btn" title="斜体" onMouseDown={(e) => { e.preventDefault(); toggleMark('italic'); }}><em>I</em></button>
+        <button className="note-editor-toolbar-btn" title="下划线" onMouseDown={(e) => { e.preventDefault(); toggleMark('underline'); }} style={{ textDecoration: 'underline' }}>U</button>
+        <button className="note-editor-toolbar-btn" title="删除线" onMouseDown={(e) => { e.preventDefault(); toggleMark('strikethrough'); }} style={{ textDecoration: 'line-through' }}>S</button>
+        <button className="note-editor-toolbar-btn" title="行内代码" onMouseDown={(e) => { e.preventDefault(); toggleMark('code'); }} style={{ fontFamily: 'monospace', fontSize: 12 }}>&lt;/&gt;</button>
+        <div className="note-editor-toolbar-divider" />
+        <button className="note-editor-toolbar-btn" title="标题1" onMouseDown={(e) => { e.preventDefault(); toggleBlock('h1'); }} style={{ fontWeight: 700, fontSize: 11 }}>H1</button>
+        <button className="note-editor-toolbar-btn" title="标题2" onMouseDown={(e) => { e.preventDefault(); toggleBlock('h2'); }} style={{ fontWeight: 700, fontSize: 11 }}>H2</button>
+        <button className="note-editor-toolbar-btn" title="标题3" onMouseDown={(e) => { e.preventDefault(); toggleBlock('h3'); }} style={{ fontWeight: 700, fontSize: 11 }}>H3</button>
+        <div className="note-editor-toolbar-divider" />
+        <button className="note-editor-toolbar-btn" title="引用" onMouseDown={(e) => { e.preventDefault(); toggleBlock('blockquote'); }} style={{ fontSize: 16 }}>&ldquo;</button>
       </div>
 
       {/* Editor */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-        <Plate editor={editor}>
-          <PlateContent
-            style={{
-              minHeight: '100%',
-              outline: 'none',
-              fontSize: 14,
-              lineHeight: 1.7,
-              color: '#262626',
-            }}
-          >
-            <Editable
-              onChange={handleEditorChange}
-              placeholder="开始写作..."
+      <div className="note-editor-content">
+        <div className="note-editor-inner">
+          <Plate editor={editor}>
+            <PlateContent
               style={{
                 minHeight: '100%',
                 outline: 'none',
+                fontSize: 15,
+                lineHeight: 1.8,
+                color: 'var(--text-strong)',
               }}
-            />
-          </PlateContent>
-        </Plate>
+            >
+              <Editable
+                onChange={handleEditorChange}
+                placeholder="开始写作..."
+                style={{
+                  minHeight: '100%',
+                  outline: 'none',
+                  color: 'var(--text-strong)',
+                }}
+              />
+            </PlateContent>
+          </Plate>
+        </div>
       </div>
     </div>
   );

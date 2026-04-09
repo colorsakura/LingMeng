@@ -18,7 +18,7 @@ function App() {
   }, [loadSettings, loadSessions, loadNotes]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gray-100">
+    <div className="h-screen w-screen overflow-hidden" style={{ background: 'var(--bg-content)' }}>
       <Routes>
         <Route path="/" element={<MainPage />}>
           <Route index element={<ChatPage />} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Input, Button, Tag, message } from 'antd';
+import { Input, Button, message } from 'antd';
 import { BackendProvider, BackendProviderDisplayNames, BackendProviderColors } from '@shared/types';
 import { useSettingsStore } from '../../stores/settingsStore';
 
@@ -51,37 +51,34 @@ export default function TokenCard({ provider }: TokenCardProps) {
   };
 
   return (
-    <Card
-      className="token-card"
-      styles={{ body: { padding: 20 } }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className="token-card">
+      <div className="token-card-header">
+        <div className="token-card-info">
           <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: color,
-              color: '#fff',
-              fontWeight: 'bold',
-              fontSize: 14,
-            }}
+            className="token-card-avatar"
+            style={{ background: color }}
           >
             {initials[provider]}
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: 15, color: '#262626' }}>
-              {BackendProviderDisplayNames[provider]}
+            <div className="token-card-name">{BackendProviderDisplayNames[provider]}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+              {hasToken ? '已配置' : '未配置'}
             </div>
           </div>
         </div>
-        <Tag color={hasToken ? 'success' : 'warning'}>
+        <span
+          style={{
+            fontSize: 10,
+            padding: '2px 8px',
+            borderRadius: 4,
+            background: hasToken ? 'rgba(82,196,26,0.15)' : 'rgba(250,173,20,0.15)',
+            color: hasToken ? '#52c41a' : '#faad14',
+            fontWeight: 600,
+          }}
+        >
           {hasToken ? '已配置' : '未配置'}
-        </Tag>
+        </span>
       </div>
 
       <div style={{ marginBottom: 12 }}>
@@ -89,7 +86,6 @@ export default function TokenCard({ provider }: TokenCardProps) {
           value={token}
           onChange={(e) => setToken(e.target.value)}
           placeholder={hasToken ? '已保存，输入新token覆盖' : '输入 API Token'}
-          style={{ borderRadius: 8 }}
         />
       </div>
 
@@ -99,14 +95,12 @@ export default function TokenCard({ provider }: TokenCardProps) {
         disabled={!token.trim()}
         loading={saving}
         block
-        style={{ borderRadius: 8 }}
+        style={{ borderRadius: 6 }}
       >
         保存 Token
       </Button>
 
-      <div style={{ marginTop: 12, fontSize: 12, color: '#8c8c8c', lineHeight: 1.6 }}>
-        {getInstructions()}
-      </div>
-    </Card>
+      <div className="token-card-instructions">{getInstructions()}</div>
+    </div>
   );
 }

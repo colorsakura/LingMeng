@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input, Button } from 'antd';
+import { Input } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 
 interface ChatInputProps {
@@ -28,7 +28,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
 
   return (
     <div className="chat-input-wrapper">
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+      <div className="chat-input-inner">
         <div style={{ flex: 1 }}>
           <Input.TextArea
             value={content}
@@ -37,16 +37,34 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
             placeholder="输入消息，Enter 发送，Shift+Enter 换行..."
             disabled={disabled}
             autoSize={{ minRows: 1, maxRows: 5 }}
-            style={{ borderRadius: 10, resize: 'none' }}
+            style={{
+              resize: 'none',
+              fontSize: 14,
+              lineHeight: 1.6,
+            }}
           />
         </div>
-        <Button
-          type="primary"
-          icon={<SendOutlined />}
+        <button
           onClick={handleSend}
           disabled={!canSend}
-          style={{ borderRadius: 10, height: 40, width: 40, padding: 0 }}
-        />
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            border: 'none',
+            background: canSend ? '#6e8cba' : '#252526',
+            color: canSend ? '#fff' : '#6b6b6b',
+            cursor: canSend ? 'pointer' : 'not-allowed',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'background 0.15s',
+            fontSize: 16,
+          }}
+        >
+          <SendOutlined />
+        </button>
       </div>
     </div>
   );

@@ -13,22 +13,22 @@ export default function BackendSwitcher() {
     return {
       value: provider,
       label: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <span
             style={{
-              width: 10,
-              height: 10,
+              width: 7,
+              height: 7,
               borderRadius: '50%',
               backgroundColor: color,
               display: 'inline-block',
-              boxShadow: `0 0 6px ${color}`,
+              flexShrink: 0,
             }}
           />
-          <span style={{ flex: 1 }}>{BackendProviderDisplayNames[provider]}</span>
+          <span style={{ flex: 1, fontSize: 12 }}>{BackendProviderDisplayNames[provider]}</span>
           {isConfigured ? (
-            <CheckCircleFilled style={{ color: '#52c41a', fontSize: 14 }} />
+            <CheckCircleFilled style={{ color: '#52c41a', fontSize: 11 }} />
           ) : (
-            <ExclamationCircleFilled style={{ color: '#faad14', fontSize: 14 }} />
+            <ExclamationCircleFilled style={{ color: '#faad14', fontSize: 11 }} />
           )}
         </div>
       ),
@@ -41,7 +41,8 @@ export default function BackendSwitcher() {
       onChange={(value) => setCurrentBackend(value as BackendProvider)}
       options={options}
       style={{ width: '100%' }}
-      popupMatchSelectWidth={200}
+      popupMatchSelectWidth={180}
+      size="small"
     />
   );
 }
